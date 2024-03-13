@@ -1,0 +1,50 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "Clusters_train_adx_name": {
+            "defaultValue": "train-adx",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Kusto/Clusters",
+            "apiVersion": "2023-08-15",
+            "name": "[parameters('Clusters_train_adx_name')]",
+            "location": "West Europe",
+            "sku": {
+                "name": "Dev(No SLA)_Standard_E2a_v4",
+                "tier": "Basic",
+                "capacity": 1
+            },
+            "zones": [
+                "1",
+                "3",
+                "2"
+            ],
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "trustedExternalTenants": [],
+                "enableDiskEncryption": false,
+                "enableStreamingIngest": false,
+                "languageExtensions": {
+                    "value": []
+                },
+                "enablePurge": false,
+                "enableDoubleEncryption": false,
+                "engineType": "V3",
+                "acceptedAudiences": [],
+                "restrictOutboundNetworkAccess": "Disabled",
+                "allowedFqdnList": [],
+                "publicNetworkAccess": "Enabled",
+                "allowedIpRangeList": [],
+                "enableAutoStop": true,
+                "publicIPType": "IPv4"
+            }
+        }
+    ]
+}

@@ -1,0 +1,143 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "namespaces_rail_health_event_hub_ns_name": {
+            "defaultValue": "rail-health-event-hub-ns",
+            "type": "String"
+        },
+        "storageAccounts_railmeasurements_externalid": {
+            "defaultValue": "/subscriptions/1d9298eb-7897-4321-a01f-4719d90d9464/resourceGroups/playground/providers/Microsoft.Storage/storageAccounts/railmeasurements",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.EventHub/namespaces",
+            "apiVersion": "2023-01-01-preview",
+            "name": "[parameters('namespaces_rail_health_event_hub_ns_name')]",
+            "location": "West Europe",
+            "tags": {
+                "app": "rail-halth"
+            },
+            "sku": {
+                "name": "Standard",
+                "tier": "Standard",
+                "capacity": 1
+            },
+            "properties": {
+                "minimumTlsVersion": "1.2",
+                "publicNetworkAccess": "Enabled",
+                "disableLocalAuth": false,
+                "zoneRedundant": true,
+                "isAutoInflateEnabled": false,
+                "maximumThroughputUnits": 0,
+                "kafkaEnabled": true
+            }
+        },
+        {
+            "type": "Microsoft.EventHub/namespaces/authorizationrules",
+            "apiVersion": "2023-01-01-preview",
+            "name": "[concat(parameters('namespaces_rail_health_event_hub_ns_name'), '/RootManageSharedAccessKey')]",
+            "location": "westeurope",
+            "dependsOn": [
+                "[resourceId('Microsoft.EventHub/namespaces', parameters('namespaces_rail_health_event_hub_ns_name'))]"
+            ],
+            "properties": {
+                "rights": [
+                    "Listen",
+                    "Manage",
+                    "Send"
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.EventHub/namespaces/eventhubs",
+            "apiVersion": "2023-01-01-preview",
+            "name": "[concat(parameters('namespaces_rail_health_event_hub_ns_name'), '/rail-telemetry')]",
+            "location": "westeurope",
+            "dependsOn": [
+                "[resourceId('Microsoft.EventHub/namespaces', parameters('namespaces_rail_health_event_hub_ns_name'))]"
+            ],
+            "properties": {
+                "retentionDescription": {
+                    "cleanupPolicy": "Delete",
+                    "retentionTimeInHours": 2
+                },
+                "messageRetentionInDays": 1,
+                "partitionCount": 2,
+                "status": "Active",
+                "captureDescription": {
+                    "enabled": true,
+                    "encoding": "Avro",
+                    "destination": {
+                        "name": "EventHubArchive.AzureBlockBlob",
+                        "properties": {
+                            "storageAccountResourceId": "[parameters('storageAccounts_railmeasurements_externalid')]",
+                            "blobContainer": "measurements",
+                            "archiveNameFormat": "{Namespace}/{EventHub}/{PartitionId}/{Year}/{Month}/{Day}/{Hour}/{Minute}/{Second}"
+                        }
+                    },
+                    "intervalInSeconds": 300,
+                    "sizeLimitInBytes": 314572800
+                }
+            }
+        },
+        {
+            "type": "Microsoft.EventHub/namespaces/networkrulesets",
+            "apiVersion": "2023-01-01-preview",
+            "name": "[concat(parameters('namespaces_rail_health_event_hub_ns_name'), '/default')]",
+            "location": "westeurope",
+            "dependsOn": [
+                "[resourceId('Microsoft.EventHub/namespaces', parameters('namespaces_rail_health_event_hub_ns_name'))]"
+            ],
+            "properties": {
+                "publicNetworkAccess": "Enabled",
+                "defaultAction": "Allow",
+                "virtualNetworkRules": [],
+                "ipRules": [],
+                "trustedServiceAccessEnabled": false
+            }
+        },
+        {
+            "type": "Microsoft.EventHub/namespaces/eventhubs/authorizationrules",
+            "apiVersion": "2023-01-01-preview",
+            "name": "[concat(parameters('namespaces_rail_health_event_hub_ns_name'), '/rail-telemetry/owner')]",
+            "location": "westeurope",
+            "dependsOn": [
+                "[resourceId('Microsoft.EventHub/namespaces/eventhubs', parameters('namespaces_rail_health_event_hub_ns_name'), 'rail-telemetry')]",
+                "[resourceId('Microsoft.EventHub/namespaces', parameters('namespaces_rail_health_event_hub_ns_name'))]"
+            ],
+            "properties": {
+                "rights": [
+                    "Manage",
+                    "Listen",
+                    "Send"
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.EventHub/namespaces/eventhubs/consumergroups",
+            "apiVersion": "2023-01-01-preview",
+            "name": "[concat(parameters('namespaces_rail_health_event_hub_ns_name'), '/rail-telemetry/$Default')]",
+            "location": "westeurope",
+            "dependsOn": [
+                "[resourceId('Microsoft.EventHub/namespaces/eventhubs', parameters('namespaces_rail_health_event_hub_ns_name'), 'rail-telemetry')]",
+                "[resourceId('Microsoft.EventHub/namespaces', parameters('namespaces_rail_health_event_hub_ns_name'))]"
+            ],
+            "properties": {}
+        },
+        {
+            "type": "Microsoft.EventHub/namespaces/eventhubs/consumergroups",
+            "apiVersion": "2023-01-01-preview",
+            "name": "[concat(parameters('namespaces_rail_health_event_hub_ns_name'), '/rail-telemetry/adx')]",
+            "location": "westeurope",
+            "dependsOn": [
+                "[resourceId('Microsoft.EventHub/namespaces/eventhubs', parameters('namespaces_rail_health_event_hub_ns_name'), 'rail-telemetry')]",
+                "[resourceId('Microsoft.EventHub/namespaces', parameters('namespaces_rail_health_event_hub_ns_name'))]"
+            ],
+            "properties": {}
+        }
+    ]
+}
