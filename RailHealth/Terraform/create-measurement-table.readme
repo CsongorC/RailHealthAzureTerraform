@@ -1,0 +1,18 @@
+.create table measurement (
+    ['time']: long, 
+    temperature: long, 
+    charge: long, 
+    accelX: real, 
+    accelY: real, 
+    accelZ: real, 
+    gyroX: real, 
+    gyroY: real, 
+    gyroZ: long, 
+    magnitudeX: real, 
+    magnitudeY: real, 
+    magnitudeZ: real, 
+    locationLatitude: real, 
+    locationLongitude: real, 
+    timeStamp: string, 
+    sessionId: string
+)

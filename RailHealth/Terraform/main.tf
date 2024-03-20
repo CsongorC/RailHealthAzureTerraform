@@ -53,29 +53,30 @@ resource "azurerm_storage_container" "containerMearurements" {
   container_access_type = "private"
 }
 
-# resource "azurerm_kusto_cluster" "kcrailhealth" {
-#   name                = "kcrailhealth"
-#   location            = "West Europe"
-#   resource_group_name = azurerm_resource_group.rgRailHealth.name
-#   sku {
-#     name     = "Dev(No SLA)_Standard_E2a_v4"
-#     capacity = 1
-#   }
+resource "azurerm_kusto_cluster" "kcrailhealth" {
+  name                = "kcrailhealth"
+  location            = "West Europe"
+  resource_group_name = azurerm_resource_group.rgRailHealth.name
+  sku {
+    name     = "Dev(No SLA)_Standard_E2a_v4"
+    capacity = 1
+  }
 
-#   zones = ["1", "3", "2"]
+  zones = ["1", "3", "2"]
 
-#   identity {
-#     type = "SystemAssigned"
-#   }
+  identity {
+    type = "SystemAssigned"
+  }
 
-#   tags = {
-#     PROJECT = local.tag
-#   }
+  tags = {
+    PROJECT = local.tag
+  }
 
-#   trusted_external_tenants = []
-#   language_extensions      = []
+  trusted_external_tenants = []
+  language_extensions      = []
 
-# }
+}
+
 resource "azurerm_eventhub" "eventHubRailHealth" {
     name = "eventHubRailHealth"
     namespace_name = azurerm_eventhub_namespace.rail_health_event_hub_ns.name
@@ -149,4 +150,24 @@ resource "azurerm_network_security_group" "rail_health_event_hub_ns_nsg" {
     tags = {
       PROJECT = local.tag
     } 
+}
+
+resource "azurerm_kusto_database" "rail_health_database" {
+  name = "rail-health-database"
+  resource_group_name = azurerm_resource_group.rgRailHealth.name
+  location            = azurerm_kusto_cluster.kcrailhealth.location
+  cluster_name        = azurerm_kusto_cluster.kcrailhealth.name
+  hot_cache_period    = "P7D"
+  soft_delete_period  = "P31D"
+}
+
+resource "azurerm_kusto_eventhub_data_connection" "eventhub_connection" {
+  name                = "rail-health-eventhub-data-connection"
+  resource_group_name = azurerm_resource_group.rgRailHealth.name
+  location            = azurerm_kusto_cluster.kcrailhealth.location
+  cluster_name        = azurerm_kusto_cluster.kcrailhealth.name
+  database_name       = azurerm_kusto_database.rail_health_database.name
+
+  eventhub_id    = azurerm_eventhub.eventHubRailHealth.id
+  consumer_group = azurerm_eventhub_consumer_group.rail_telemetry_adx_consumer_group.name
 }
