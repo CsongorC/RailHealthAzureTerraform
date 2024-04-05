@@ -1,13 +1,13 @@
 .create table measurement (
     ['time']: long, 
-    temperature: long, 
-    charge: long, 
+    temperature: real, 
+    charge: real, 
     accelX: real, 
     accelY: real, 
     accelZ: real, 
     gyroX: real, 
     gyroY: real, 
-    gyroZ: long, 
+    gyroZ: real, 
     magnitudeX: real, 
     magnitudeY: real, 
     magnitudeZ: real, 
@@ -16,3 +16,8 @@
     timeStamp: string, 
     sessionId: string
 )
+
+.create table measurement ingestion json mapping "measurement_mapping"
+'['
+'{"column": "time","datatype": "long","path": "$.time"}, {"column": "temperature","datatype": "real","path": "$.temperature"}, {"column": "charge","datatype": "real","path": "$.charge"}, {"column": "accelX","datatype": "real","path": "$.accelX"}, {"column": "accelY","datatype": "real","path": "$.accelY"}, {"column": "accelZ","datatype": "real","path": "$.accelZ"}, {"column": "gyroX","datatype": "real","path": "$.gyroX"}, {"column": "gyroY","datatype": "real","path": "$.gyroY"}, {"column": "gyroZ","datatype": "real","path": "$.gyroZ"}, {"column": "magnitudeX","datatype": "real","path": "$.magnitudeX"}, {"column": "magnitudeY","datatype": "real","path": "$.magnitudeY"}, {"column": "magnitudeZ","datatype": "real","path": "$.magnitudeZ"}, {"column": "locationLatitude","datatype": "real","path": "$.locationLatitude"}, {"column": "locationLongitude","datatype": "real","path": "$.locationLongitude"}, {"column": "timeStamp","datatype": "string","path": "$.timeStamp"}, {"column": "sessionId","datatype": "string","path": "$.sessionId"}'
+']'
